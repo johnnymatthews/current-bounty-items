@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>IPFS Docs Bounties</title>
+        <link rel="shortcut icon" type="image/icon" href="./favicon.png" />
+        <meta name="description" content="A constantly updating list of available bounties in the IPFS Docs GitHub repo." />
+        <meta name="author" content="Johnny" />
+    </head>
+
+    <body onload="get_data_and_paint()">
+        <header>
+            <h1>IPFS Docs Bounties</h1>
+            <subtitle>The following issues have available bounties within the IPFS Docs GitHub repo.</subtitle>
+        </header>
+        <main id="main"></main>
+        <script>
+            function get_data_and_paint() {
+                fetch(`https://api.github.com/repos/ipfs/ipfs-docs/issues?labels=bounty`)
+                    .then((resp) => resp.json())
+                    .then(function (issues) {
+                        for (let issue of issues) {
+                            let difficulty = get_difficulty(issue.labels);
+                            let priority = get_priority(issue.labels);
+                            let reward = calculate_reward(difficulty, priority);
+                            
+                            let output_html = document.createElement(`ul`);
+                            output_html.innerHTML = `<li><a href="${issue.html_url}">${issue.title}</a><br>\$${reward}, ${difficulty}, priority ${priority}.</li>`;
+                            document.getElementById(`main`).appendChild(output_html);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            }
+
+            function get_difficulty(labels) {
+                for (let label of labels) {
+                    switch (label.name) {
+                        case `dif/trivial`:
+                            return `trivial`;
+                            break;
+                        case `dif/easy`:
+                            return `easy`;
+                            break;
+                        case `dif/medium`:
+                            return `medium`;
+                            break;
+                        case `dif/hard`:
+                            return `hard`;
+                            break;
+                        case `dif/expert`:
+                            return `expert`;
+                    }
+                }
+            }
+
+            function get_priority(labels) {
+                for (let label of labels) {
+                    switch (label.name.toUpperCase()) {
+                        case `P0`:
+                            return 0;
+                            break;
+                        case `P1`:
+                            return 1;
+                            break;
+                        case `P2`:
+                            return 2;
+                            break;
+                        case `P3`:
+                            return 3;
+                    }
+                }
+            }
+
+            function calculate_reward(difficulty, priority) {
+                let base_value = 150;
+                let difficulty_number;
+                let priority_number;
+
+                switch (difficulty) {
+                    case `trivial`:
+                        difficulty_number = 0.8;
+                        break;
+                    case `easy`:
+                        difficulty_number = 1;
+                        break;
+                    case `medium`:
+                        difficulty_number = 1.5;
+                        break;
+                    case `hard`:
+                        difficulty_number = 2;
+                        break;
+                    case `expert`:
+                        difficulty_number = 2.5;
+                }
+
+                switch (priority) {
+                    case 3:
+                        priority_number = 0.8;
+                        break;
+                    case 2:
+                        priority_number = 1;
+                        break;
+                    case 1:
+                        priority_number = 1.5;
+                        break;
+                    case 0:
+                        priority_number = 2;
+                }
+
+                return base_value * difficulty_number * priority_number;
+            }
+        </script>
+    </body>
+</html>
